@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
-const { supabase } = require("./db/supabase");
 
 const authRoutes = require("./routes/authRoutes");
 const exerciseRoutes = require("./routes/exerciseRoutes");
@@ -27,23 +26,9 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/streak", streakRoutes);
 
-app.get("/api/test-db", async (req, res) => {
-    const { data, error } = await supabase
-        .from("exercises")
-        .select("*")
-        .limit(1);
-
-    if (error)
-        return res.status(500).json({ error: error.message });
-
-    res.json({
-        message: "Database connected successfully",
-        data
-    });
-});
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
 });
