@@ -9,8 +9,7 @@ on:
       - main
 
 jobs:
-
-  build-and-check:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -44,8 +43,24 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:5000
         run: npm run build
 
-      - name: Build backend Docker image
-        run: docker build -t gym-tracker-backend ./backend
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build frontend Docker image
-        run: docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:5000 -t gym-tracker-frontend ./frontend
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/gym-tracker-backend:latest
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://localhost:5000
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/gym-tracker-frontend:latest
