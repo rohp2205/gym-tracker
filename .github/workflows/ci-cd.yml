@@ -1,0 +1,51 @@
+name: Gym Tracker CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  build-and-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Check backend
+        working-directory: backend
+        run: node --check src/server.js
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5000
+        run: npm run build
+
+      - name: Build backend Docker image
+        run: docker build -t gym-tracker-backend ./backend
+
+      - name: Build frontend Docker image
+        run: docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:5000 -t gym-tracker-frontend ./frontend
